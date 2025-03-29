@@ -1,12 +1,16 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { execSync } from "child_process";
-import { temporaryDirectory } from "tempy";
 import { program } from "commander";
 import ignore from "ignore";
 import slugify from "slugify";
 import { encode } from "gpt-3-encoder"; // Add this import for token estimation
 import { allowedExtensions } from "./allowed-extensions.mjs";
+import { fileURLToPath } from "url";
+
+// Replace __dirname with a derived directory path
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const DEBUG = process.env.DEBUG === "true";
 
@@ -14,6 +18,12 @@ function log(...args) {
   if (DEBUG) {
     console.log(...args);
   }
+}
+
+// Replace tempy.temporaryDirectory with a custom implementation
+function createTemporaryDirectory() {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "better-repo-to-llm-"));
+  return tempDir;
 }
 
 program
@@ -28,7 +38,7 @@ const additionalExcludes = program.opts().exclude || [];
 const shouldMinify = program.opts().minify;
 const maxLines = program.opts().maxLines || 800; // Use the provided value or default to 800
 
-const tempDir = temporaryDirectory();
+const tempDir = createTemporaryDirectory();
 
 const MAX_FILE_LINES = 800; // New constant for maximum file lines
 let output = "";
